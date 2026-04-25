@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bar Toto · Table 30 · Bill Splitter</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161c27;
+    --surface2: #1c2535;
+    --border: #ffffff0d;
+    --border2: #ffffff18;
+    --teal: #336563;
+    --blue: #1c89d9;
+    --teal-light: #4a9e9b;
+    --text: #e8edf5;
+    --muted: #6b7a94;
+    --faint: #2a3448;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 20px; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(160deg, #1a2d3a 0%, var(--bg) 55%);
+    border-bottom: 1px solid var(--border2);
+    padding: 36px 20px 28px;
+    position: relative; overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, #336563 0%, transparent 70%);
+    opacity: 0.18; pointer-events: none;
+  }
+  .header-inner { max-width: 480px; margin: 0 auto; }
+  .restaurant { font-size: 11px; letter-spacing: 0.18em; color: var(--teal-light); text-transform: uppercase; margin-bottom: 6px; }
+  .title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; line-height: 1.1; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .chip {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.04em;
+    padding: 3px 10px; border-radius: 20px; border: 1px solid;
+  }
+  .chip-teal { color: var(--teal-light); border-color: #33656355; background: #33656318; }
+  .chip-blue { color: #6ab4f0; border-color: #1c89d940; background: #1c89d912; }
+
+  /* ── INTRO TEXT ── */
+  .intro {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 24px 0 20px;
+    font-size: 14px;
+    color: #a0afc4;
+    line-height: 1.6;
+  }
+  .intro strong { color: var(--text); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px; padding-left: 2px;
+  }
+
+  /* ── ITEM CARD ── */
+  .item-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .item-card:active { transform: scale(0.985); }
+  .item-card.selected {
+    background: #1a2e2d;
+    border-color: var(--teal);
+  }
+  .item-card:hover:not(.selected) {
+    background: var(--surface2);
+    border-color: #ffffff20;
+  }
+
+  .checkbox {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    border: 2px solid var(--faint);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    background: transparent;
+  }
+  .item-card.selected .checkbox {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+  .checkmark { display: none; }
+  .item-card.selected .checkmark { display: block; }
+
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .item-tag { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .item-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px; font-weight: 500;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .item-card.selected .item-price { color: var(--teal-light); }
+
+  /* ── TOTALS ── */
+  .totals-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 28px;
+    position: sticky;
+    bottom: 16px;
+    box-shadow: 0 8px 40px #00000055;
+  }
+  .totals-box.has-items {
+    border-color: #33656540;
+    background: #111e1e;
+  }
+  .totals-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+  }
+  .totals-row .label { color: var(--muted); }
+  .totals-row .val { font-family: 'DM Mono', monospace; color: #c0cfe0; }
+  .totals-divider { border: none; border-top: 1px solid var(--border2); margin: 10px 0; }
+  .totals-total {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 2px;
+  }
+  .totals-total .label { color: var(--text); font-size: 15px; font-weight: 600; }
+  .totals-total .val {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px; font-weight: 500;
+    color: var(--teal-light);
+  }
+  .empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 4px 0 6px; }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note {
+    text-align: center;
+    color: #3a4a5e;
+    font-size: 11px;
+    margin-top: 14px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .item-card { animation: fadeUp 0.3s ease both; }
+  .item-card:nth-child(1)  { animation-delay: 0.03s; }
+  .item-card:nth-child(2)  { animation-delay: 0.06s; }
+  .item-card:nth-child(3)  { animation-delay: 0.09s; }
+  .item-card:nth-child(4)  { animation-delay: 0.12s; }
+  .item-card:nth-child(5)  { animation-delay: 0.15s; }
+  .item-card:nth-child(6)  { animation-delay: 0.18s; }
+  .item-card:nth-child(7)  { animation-delay: 0.21s; }
+  .item-card:nth-child(8)  { animation-delay: 0.24s; }
+  .item-card:nth-child(9)  { animation-delay: 0.27s; }
+  .item-card:nth-child(10) { animation-delay: 0.30s; }
+  .item-card:nth-child(11) { animation-delay: 0.33s; }
+  .item-card:nth-child(12) { animation-delay: 0.36s; }
+  .item-card:nth-child(13) { animation-delay: 0.39s; }
+  .item-card:nth-child(14) { animation-delay: 0.42s; }
+  .item-card:nth-child(15) { animation-delay: 0.45s; }
+  .item-card:nth-child(16) { animation-delay: 0.48s; }
+  .item-card:nth-child(17) { animation-delay: 0.51s; }
+  .item-card:nth-child(18) { animation-delay: 0.54s; }
+  .item-card:nth-child(19) { animation-delay: 0.57s; }
+  .item-card:nth-child(20) { animation-delay: 0.60s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="restaurant">Bar Toto · Brooklyn · Table 30</div>
+    <h1 class="title">What did<br/>you order?</h1>
+    <p class="subtitle">Tap everything you ordered</p>
+    <div class="chips">
+      <span class="chip chip-teal">NY Tax 8.875%</span>
+      <span class="chip chip-blue">Tip 20%</span>
+      <span class="chip chip-teal">Auto-calculated</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <strong>Check off your items below.</strong> Your subtotal, tax, and tip will calculate automatically at the bottom.
+  </div>
+
+  <div class="section-label">All items · April 10, 2026</div>
+
+  <div id="item-list"></div>
+
+  <div class="totals-box" id="totals-box">
+    <div class="empty-state" id="empty-state">Select your items above to see your total</div>
+    <div id="totals-detail" style="display:none">
+      <div class="totals-row"><span class="label">Subtotal</span><span class="val" id="val-sub">$0.00</span></div>
+      <div class="totals-row"><span class="label">NY Tax (8.875%)</span><span class="val" id="val-tax">$0.00</span></div>
+      <div class="totals-row"><span class="label">Tip (20%)</span><span class="val" id="val-tip">$0.00</span></div>
+      <hr class="totals-divider"/>
+      <div class="totals-total">
+        <span class="label">You owe</span>
+        <span class="val" id="val-total">$0.00</span>
+      </div>
+    </div>
+    <a href="https://venmo.com/u/ajpiont" target="_blank" style="
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #008CFF; color: #fff;
+      border-radius: 10px; padding: 13px 20px;
+      text-decoration: none; font-weight: 600; font-size: 15px;
+      margin-top: 14px;
+      transition: background 0.2s, transform 0.15s;
+    "
+      onmouseenter="this.style.background='#007ae0'"
+      onmouseleave="this.style.background='#008CFF'"
+      onmousedown="this.style.transform='scale(0.97)'"
+      onmouseup="this.style.transform='scale(1)'"
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M19.5 2C20.6 4.3 21 6 21 8.2c0 5.7-4.9 13.1-8.9 18H5.4L2 3.4l6.9-.7 1.8 14.1C12.4 13.4 14.9 7.6 14.9 4c0-1.5-.3-2.6-.7-3.5L19.5 2z"/></svg>
+      Pay AJ on Venmo
+    </a>
+  </div>
+
+  <div class="footer-note" style="margin-top: 12px;">Bar Toto · 4/10/2026</div>
+</div>
+
+<script>
+const TAX = 0.08875;
+const TIP = 0.20;
+
+// Items expanded from receipt (qty > 1 = multiple entries, each at per-unit price)
+const ITEMS = [
+  { id:  1, name: "Too Young to Choose",  price: 16.00, category: "cocktail" },
+  { id:  2, name: "Other Half",           price:  8.00, category: "beer"     },
+  { id:  3, name: "Costa Tropica",        price: 16.00, category: "cocktail" },
+  { id:  4, name: "Costa Tropica",        price: 16.00, category: "cocktail" },
+  { id:  5, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id:  6, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id:  7, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id:  8, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id:  9, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id: 10, name: "Aperol Spritz",        price: 13.00, category: "cocktail" },
+  { id: 11, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 12, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 13, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 14, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 15, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 16, name: "Kentucky Mule",        price: 16.00, category: "cocktail" },
+  { id: 17, name: "Moretti",              price:  8.00, category: "beer"     },
+  { id: 18, name: "Moretti",              price:  8.00, category: "beer"     },
+  { id: 19, name: "Gnocchi",             price: 25.00, category: "food"     },
+  { id: 20, name: "Gnocchi",             price: 25.00, category: "food"     },
+  { id: 21, name: "Rigatoni Pork Ragu",  price: 26.00, category: "food"     },
+  { id: 22, name: "Crab Arancini",       price: 17.00, category: "food"     },
+  { id: 23, name: "Burrata",             price: 19.00, category: "food"     },
+  { id: 24, name: "Caesar Salad",         price: 15.00, category: "food"     },
+];
+
+const CATEGORY_LABELS = {
+  cocktail: "🍹 Cocktail",
+  beer:     "🍺 Beer",
+  food:     "🍽️ Food",
+};
+
+const selected = new Set();
+
+// Count duplicates to label them (e.g. "Aperol Spritz #2")
+const nameCounts = {};
+const nameIndex  = {};
+ITEMS.forEach(item => { nameCounts[item.name] = (nameCounts[item.name] || 0) + 1; });
+
+function getDisplayName(item) {
+  if (nameCounts[item.name] > 1) {
+    nameIndex[item.name] = (nameIndex[item.name] || 0) + 1;
+    return `${item.name} <span style="color:#4a6080;font-size:12px">#${nameIndex[item.name]}</span>`;
+  }
+  return item.name;
+}
+
+// Build list
+const list = document.getElementById("item-list");
+ITEMS.forEach(item => {
+  const card = document.createElement("div");
+  card.className = "item-card";
+  card.dataset.id = item.id;
+  card.innerHTML = `
+    <div class="checkbox">
+      <svg class="checkmark" width="12" height="10" viewBox="0 0 12 10" fill="none">
+        <path d="M1.5 5L4.5 8L10.5 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="item-info">
+      <div class="item-name">${getDisplayName(item)}</div>
+      <div class="item-tag">${CATEGORY_LABELS[item.category] || item.category}</div>
+    </div>
+    <div class="item-price">$${item.price.toFixed(2)}</div>
+  `;
+  card.addEventListener("click", () => toggle(item.id, card));
+  list.appendChild(card);
+});
+
+function toggle(id, card) {
+  if (selected.has(id)) {
+    selected.delete(id);
+    card.classList.remove("selected");
+  } else {
+    selected.add(id);
+    card.classList.add("selected");
+  }
+  recalc();
+}
+
+function fmt(n) { return "$" + n.toFixed(2); }
+
+function recalc() {
+  const box      = document.getElementById("totals-box");
+  const empty    = document.getElementById("empty-state");
+  const detail   = document.getElementById("totals-detail");
+
+  if (selected.size === 0) {
+    box.classList.remove("has-items");
+    empty.style.display  = "block";
+    detail.style.display = "none";
+    return;
+  }
+
+  const subtotal = ITEMS
+    .filter(i => selected.has(i.id))
+    .reduce((s, i) => s + i.price, 0);
+
+  const tax   = subtotal * TAX;
+  const tip   = subtotal * TIP;
+  const total = subtotal + tax + tip;
+
+  box.classList.add("has-items");
+  empty.style.display  = "none";
+  detail.style.display = "block";
+
+  document.getElementById("val-sub").textContent   = fmt(subtotal);
+  document.getElementById("val-tax").textContent   = fmt(tax);
+  document.getElementById("val-tip").textContent   = fmt(tip);
+  document.getElementById("val-total").textContent = fmt(total);
+}
+</script>
+</body>
+</html>
